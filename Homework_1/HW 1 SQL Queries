@@ -1,0 +1,71 @@
+--Question 3 Query
+SELECT * FROM public.green_taxi_trips
+WHERE trip_distance < 1
+
+SELECT * FROM public.green_taxi_trips
+WHERE trip_distance > 1 AND trip_distance <= 3
+
+SELECT * FROM public.green_taxi_trips
+WHERE trip_distance > 3 AND trip_distance <= 7
+
+SELECT * FROM public.green_taxi_trips
+WHERE trip_distance > 7 AND trip_distance <= 10
+
+SELECT * FROM public.green_taxi_trips
+WHERE trip_distance > 10
+
+--Question 4 Query
+SELECT * FROM public.green_taxi_trips
+WHERE trip_distance = (
+	SELECT MAX(trip_distance)
+	FROM green_taxi_trips
+);
+
+--Question 5 Query
+SELECT 
+    taxi_zones."Zone" AS pickup_zone_name,
+    COUNT(*) AS trip_count
+FROM 
+    public.green_taxi_trips as trips
+JOIN
+    public.taxi_zones
+ON
+    trips."PULocationID" = taxi_zones."LocationID"
+WHERE 
+    DATE(trips."lpep_pickup_datetime") = '2019-10-18'
+    AND trips."PULocationID" IN (
+        SELECT 
+            "PULocationID"
+        FROM 
+            public.green_taxi_trips
+        GROUP BY 
+            "PULocationID"
+        HAVING 
+            COUNT(*) > 13000
+    )
+GROUP BY 
+    taxi_zones."Zone"
+ORDER BY 
+    trip_count DESC;
+
+--Question 6 Query
+SELECT 
+    dropoff_zone."Zone" AS dropoff_zone_name,
+    pickup_zone."Zone" AS pickup_zone_name,
+    MAX(trips."tip_amount") AS largest_tip
+FROM 
+    public.green_taxi_trips as trips
+JOIN
+    public.taxi_zones AS pickup_zone
+    ON trips."PULocationID" = pickup_zone."LocationID"
+JOIN
+    public.taxi_zones AS dropoff_zone
+    ON trips."DOLocationID" = dropoff_zone."LocationID"
+WHERE 
+    pickup_zone."Zone" = 'East Harlem North'
+GROUP BY 
+    dropoff_zone."Zone", pickup_zone."Zone"
+ORDER BY 
+    largest_tip DESC
+LIMIT 1;
+
